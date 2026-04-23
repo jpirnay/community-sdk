@@ -141,4 +141,4 @@ class EInkDisplay {
 // See EInkDisplay.cpp for encoding details.
 extern const unsigned char lut_factory_fast[];    // 110 bytes, 60 frames, FR=0x44
 extern const unsigned char lut_factory_quality[];  // 110 bytes, 50 frames, FR=0x22
-extern const unsigned char lut_xfast[];            // 110 bytes, 16 frames, FR=0x8F, differential (no flash)
+
