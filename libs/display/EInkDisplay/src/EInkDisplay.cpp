@@ -874,6 +874,18 @@ void EInkDisplay::displayBuffer(RefreshMode mode, const bool turnOffScreen) {
       if (invert) invertBuffer(buf);
     };
 
+    uint8_t row[128];
+    auto sendMirroredPlane = [&](const uint8_t* plane, bool invertBits) {
+      for (uint16_t y = 0; y < displayHeight; y++) {
+        const uint16_t srcY = static_cast<uint16_t>(displayHeight - 1 - y);
+        const uint8_t* src = plane + static_cast<uint32_t>(srcY) * displayWidthBytes;
+        for (uint16_t x = 0; x < displayWidthBytes; x++) {
+          row[x] = invertBits ? static_cast<uint8_t>(~src[x]) : src[x];
+        }
+        sendData(row, displayWidthBytes);
+      }
+    };
+
     const bool forcedFullSync = _x3ForceFullSyncNext;
     const bool doFullSync = !fastMode || !_x3RedRamSynced ||
                             _x3InitialFullSyncsRemaining > 0 || forcedFullSync;
@@ -1119,17 +1131,6 @@ void EInkDisplay::displayGrayBuffer(const bool turnOffScreen, const unsigned cha
       sendCommandDataX3(cmd, d, 2);
     };
     uint8_t row[128];
-    auto sendMirroredPlane = [&](const uint8_t* plane, bool invertBits) {
-      for (uint16_t y = 0; y < displayHeight; y++) {
-        const uint16_t srcY = static_cast<uint16_t>(displayHeight - 1 - y);
-        const uint8_t* src = plane + static_cast<uint32_t>(srcY) * displayWidthBytes;
-        for (uint16_t x = 0; x < displayWidthBytes; x++) {
-          row[x] = invertBits ? static_cast<uint8_t>(~src[x]) : src[x];
-        }
-        sendData(row, displayWidthBytes);
-      }
-    };
-
     const uint8_t* vcom = lut_x3_vcom_gray;
     const uint8_t* ww = lut_x3_ww_gray;
     const uint8_t* bw = lut_x3_bw_gray;
