@@ -184,28 +184,6 @@ const uint8_t lut_x3_bb_img[] PROGMEM = {
     0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-// X3 AA LUTs: fast partial-style set tuned to preserve X3 polarity behavior.
-const uint8_t lut_x3_vcom_fast[] PROGMEM = {
-    0x00, 0x18, 0x18, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t lut_x3_ww_fast[] PROGMEM = {
-    0x60, 0x18, 0x18, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t lut_x3_bw_fast[] PROGMEM = {
-    0x20, 0x18, 0x18, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t lut_x3_wb_fast[] PROGMEM = {
-    0x10, 0x18, 0x18, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t lut_x3_bb_fast[] PROGMEM = {
-    0x90, 0x18, 0x18, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
 void EInkDisplay::setDisplayDimensions(uint16_t width, uint16_t height) {
   displayWidth = width;
   displayHeight = height;
@@ -321,7 +299,7 @@ void EInkDisplay::begin() {
 
   // Initialize SPI with custom pins
   SPI.begin(_sclk, -1, _mosi, _cs);
-  const uint32_t spiHz = _x3Mode ? 10000000 : 40000000;
+  const uint32_t spiHz = _x3Mode ? 16000000 : 40000000;
   spiSettings = SPISettings(spiHz, MSBFIRST, SPI_MODE0);
   if (Serial) Serial.printf("[%lu]   SPI initialized at %lu Hz, Mode 0\n", millis(), spiHz);
 
@@ -447,8 +425,8 @@ void EInkDisplay::initDisplayController() {
 #ifndef X3_USE_X4_INIT
   if (_x3Mode) {
     sendCommand(0x00);
-    sendData(0x3F);
-    sendData(0x08);
+    sendData(0x3F);  // OEM value
+    sendData(0x0A);  // OEM value (was 0x08)
     sendCommand(0x61);
     sendData(0x03);
     sendData(0x18);
@@ -460,7 +438,7 @@ void EInkDisplay::initDisplayController() {
     sendData(0x00);
     sendData(0x00);
     sendCommand(0x03);
-    sendData(0x1D);
+    sendData(0x20);  // OEM value (was 0x1D)
     sendCommand(0x01);
     sendData(0x07);
     sendData(0x17);
@@ -468,7 +446,7 @@ void EInkDisplay::initDisplayController() {
     sendData(0x3F);
     sendData(0x17);
     sendCommand(0x82);
-    sendData(0x1D);
+    sendData(0x24);  // OEM value (was 0x1D)
     sendCommand(0x06);
     sendData(0x25);
     sendData(0x25);
@@ -478,16 +456,6 @@ void EInkDisplay::initDisplayController() {
     sendData(0x09);
     sendCommand(0xE1);
     sendData(0x02);
-    sendCommand(0x20);
-    sendData(lut_x3_vcom_full, 42);
-    sendCommand(0x21);
-    sendData(lut_x3_ww_full, 42);
-    sendCommand(0x22);
-    sendData(lut_x3_bw_full, 42);
-    sendCommand(0x23);
-    sendData(lut_x3_wb_full, 42);
-    sendCommand(0x24);
-    sendData(lut_x3_bb_full, 42);
     isScreenOn = false;
     return;
   }
@@ -674,7 +642,40 @@ void EInkDisplay::grayscaleRevert() {
 
   inGrayscaleMode = false;
 
-  // Load the revert LUT
+  if (_x3Mode) {
+    // X3: load the full bank (differential BW) and trigger — this overwrites
+    // the gray bank in the LUT registers and drives all pixels back to clean
+    // BW states, equivalent to the X4's lut_grayscale_revert pass.
+    auto sendCommandDataX3 = [&](uint8_t cmd, const uint8_t* data, uint16_t len) {
+      SPI.beginTransaction(spiSettings);
+      digitalWrite(_cs, LOW);
+      digitalWrite(_dc, LOW);
+      SPI.transfer(cmd);
+      if (len > 0 && data != nullptr) {
+        digitalWrite(_dc, HIGH);
+        SPI.writeBytes(data, len);
+      }
+      digitalWrite(_cs, HIGH);
+      SPI.endTransaction();
+    };
+    sendCommandDataX3(0x20, lut_x3_vcom_full, 42);
+    sendCommandDataX3(0x21, lut_x3_ww_full, 42);
+    sendCommandDataX3(0x22, lut_x3_bw_full, 42);
+    sendCommandDataX3(0x23, lut_x3_wb_full, 42);
+    sendCommandDataX3(0x24, lut_x3_bb_full, 42);
+    uint8_t d[2] = {0x29, 0x07};
+    sendCommandDataX3(0x50, d, 2);
+    if (!isScreenOn) {
+      sendCommand(0x04);
+      waitForRefresh(" X3_CMD04(revert)");
+      isScreenOn = true;
+    }
+    sendCommand(0x12);
+    waitForRefresh(" X3_CMD12(revert)");
+    return;
+  }
+
+  // X4: load the revert LUT and fast refresh
   setCustomLUT(true, lut_grayscale_revert);
   refreshDisplay(FAST_REFRESH);
   setCustomLUT(false);
@@ -687,21 +688,27 @@ void EInkDisplay::copyGrayscaleLsbBuffers(const uint8_t* lsbBuffer) {
   }
 
   if (_x3Mode) {
-    // X3 single-pass AA: write LSB plane to old-data RAM.
-    uint8_t row[128];
-    auto sendMirroredPlane = [&](const uint8_t* plane) {
-      for (uint16_t y = 0; y < displayHeight; y++) {
-        const uint16_t srcY = static_cast<uint16_t>(displayHeight - 1 - y);
-        const uint8_t* src = plane + static_cast<uint32_t>(srcY) * displayWidthBytes;
-        for (uint16_t x = 0; x < displayWidthBytes; x++) {
-          row[x] = src[x];
-        }
-        sendData(row, displayWidthBytes);
-      }
-    };
-
+    // X3 grayscale: write LSB plane raw to RED RAM (0x10).
+    // Y-flip in-place, bulk send, Y-flip back. The const_cast is safe because
+    // the buffer is fully restored before returning.
+    auto* buf = const_cast<uint8_t*>(lsbBuffer);
+    uint8_t rowTmp[128];
+    for (uint16_t top = 0, bot = displayHeight - 1; top < bot; top++, bot--) {
+      uint8_t* rowA = buf + static_cast<uint32_t>(top) * displayWidthBytes;
+      uint8_t* rowB = buf + static_cast<uint32_t>(bot) * displayWidthBytes;
+      memcpy(rowTmp, rowA, displayWidthBytes);
+      memcpy(rowA, rowB, displayWidthBytes);
+      memcpy(rowB, rowTmp, displayWidthBytes);
+    }
     sendCommand(0x10);
-    sendMirroredPlane(lsbBuffer);
+    sendData(buf, static_cast<uint16_t>(bufferSize));
+    for (uint16_t top = 0, bot = displayHeight - 1; top < bot; top++, bot--) {
+      uint8_t* rowA = buf + static_cast<uint32_t>(top) * displayWidthBytes;
+      uint8_t* rowB = buf + static_cast<uint32_t>(bot) * displayWidthBytes;
+      memcpy(rowTmp, rowA, displayWidthBytes);
+      memcpy(rowA, rowB, displayWidthBytes);
+      memcpy(rowB, rowTmp, displayWidthBytes);
+    }
     _x3GrayState.lsbValid = true;
     return;
   }
@@ -719,20 +726,24 @@ void EInkDisplay::copyGrayscaleMsbBuffers(const uint8_t* msbBuffer) {
       return;
     }
 
-    uint8_t row[128];
-    auto sendMirroredPlane = [&](const uint8_t* plane) {
-      for (uint16_t y = 0; y < displayHeight; y++) {
-        const uint16_t srcY = static_cast<uint16_t>(displayHeight - 1 - y);
-        const uint8_t* src = plane + static_cast<uint32_t>(srcY) * displayWidthBytes;
-        for (uint16_t x = 0; x < displayWidthBytes; x++) {
-          row[x] = src[x];
-        }
-        sendData(row, displayWidthBytes);
-      }
-    };
-
+    auto* buf = const_cast<uint8_t*>(msbBuffer);
+    uint8_t rowTmp[128];
+    for (uint16_t top = 0, bot = displayHeight - 1; top < bot; top++, bot--) {
+      uint8_t* rowA = buf + static_cast<uint32_t>(top) * displayWidthBytes;
+      uint8_t* rowB = buf + static_cast<uint32_t>(bot) * displayWidthBytes;
+      memcpy(rowTmp, rowA, displayWidthBytes);
+      memcpy(rowA, rowB, displayWidthBytes);
+      memcpy(rowB, rowTmp, displayWidthBytes);
+    }
     sendCommand(0x13);
-    sendMirroredPlane(msbBuffer);
+    sendData(buf, static_cast<uint16_t>(bufferSize));
+    for (uint16_t top = 0, bot = displayHeight - 1; top < bot; top++, bot--) {
+      uint8_t* rowA = buf + static_cast<uint32_t>(top) * displayWidthBytes;
+      uint8_t* rowB = buf + static_cast<uint32_t>(bot) * displayWidthBytes;
+      memcpy(rowTmp, rowA, displayWidthBytes);
+      memcpy(rowA, rowB, displayWidthBytes);
+      memcpy(rowB, rowTmp, displayWidthBytes);
+    }
     return;
   }
   setRamArea(0, 0, displayWidth, displayHeight);
@@ -762,24 +773,28 @@ void EInkDisplay::cleanupGrayscaleBuffers(const uint8_t* bwBuffer) {
       return;
     }
 
-    uint8_t row[128];
-    auto sendMirroredPlane = [&](const uint8_t* plane, bool invertBits) {
-      for (uint16_t y = 0; y < displayHeight; y++) {
-        const uint16_t srcY = static_cast<uint16_t>(displayHeight - 1 - y);
-        const uint8_t* src = plane + static_cast<uint32_t>(srcY) * displayWidthBytes;
-        for (uint16_t x = 0; x < displayWidthBytes; x++) {
-          row[x] = invertBits ? static_cast<uint8_t>(~src[x]) : src[x];
-        }
-        sendData(row, displayWidthBytes);
-      }
-    };
+    auto* buf = const_cast<uint8_t*>(bwBuffer);
+    uint8_t rowTmp[128];
+    for (uint16_t top = 0, bot = displayHeight - 1; top < bot; top++, bot--) {
+      uint8_t* rowA = buf + static_cast<uint32_t>(top) * displayWidthBytes;
+      uint8_t* rowB = buf + static_cast<uint32_t>(bot) * displayWidthBytes;
+      memcpy(rowTmp, rowA, displayWidthBytes);
+      memcpy(rowA, rowB, displayWidthBytes);
+      memcpy(rowB, rowTmp, displayWidthBytes);
+    }
 
-    // Rebase both X3 planes from restored BW buffer so next differential update
-    // compares from a coherent known state.
     sendCommand(0x13);
-    sendMirroredPlane(bwBuffer, false);
+    sendData(buf, static_cast<uint16_t>(bufferSize));
     sendCommand(0x10);
-    sendMirroredPlane(bwBuffer, false);
+    sendData(buf, static_cast<uint16_t>(bufferSize));
+
+    for (uint16_t top = 0, bot = displayHeight - 1; top < bot; top++, bot--) {
+      uint8_t* rowA = buf + static_cast<uint32_t>(top) * displayWidthBytes;
+      uint8_t* rowB = buf + static_cast<uint32_t>(bot) * displayWidthBytes;
+      memcpy(rowTmp, rowA, displayWidthBytes);
+      memcpy(rowA, rowB, displayWidthBytes);
+      memcpy(rowB, rowTmp, displayWidthBytes);
+    }
 
     _x3RedRamSynced = true;
     _x3ForceFullSyncNext = false;
@@ -812,7 +827,6 @@ void EInkDisplay::displayBuffer(RefreshMode mode, const bool turnOffScreen) {
     // On X3, treat HALF refresh as fast differential mode.
     // Reader uses HALF as a cadence hint, but forcing full here makes turns too slow.
     const bool fastMode = (mode != FULL_REFRESH);
-    uint8_t row[128];
     auto sendCommandDataX3 = [&](uint8_t cmd, const uint8_t* data, uint16_t len) {
       SPI.beginTransaction(spiSettings);
       digitalWrite(_cs, LOW);
@@ -829,15 +843,35 @@ void EInkDisplay::displayBuffer(RefreshMode mode, const bool turnOffScreen) {
       const uint8_t d[2] = {d0, d1};
       sendCommandDataX3(cmd, d, 2);
     };
-    auto sendMirroredPlane = [&](const uint8_t* plane, bool invertBits) {
-      for (uint16_t y = 0; y < displayHeight; y++) {
-        const uint16_t srcY = static_cast<uint16_t>(displayHeight - 1 - y);
-        const uint8_t* src = plane + static_cast<uint32_t>(srcY) * displayWidthBytes;
-        for (uint16_t x = 0; x < displayWidthBytes; x++) {
-          row[x] = invertBits ? static_cast<uint8_t>(~src[x]) : src[x];
-        }
-        sendData(row, displayWidthBytes);
+
+    // Reverse row order of a buffer in-place (Y-flip). The X3 controller scans
+    // gates upward (UD=1) so the first byte sent maps to the bottom-left pixel.
+    // The framebuffer stores row 0 at offset 0 (top), so we reverse rows before
+    // sending and restore after. Uses a small stack row buffer (99 bytes for X3).
+    uint8_t rowTmp[128];
+    auto flipRowsInPlace = [&](uint8_t* buf) {
+      for (uint16_t top = 0, bot = displayHeight - 1; top < bot; top++, bot--) {
+        uint8_t* rowA = buf + static_cast<uint32_t>(top) * displayWidthBytes;
+        uint8_t* rowB = buf + static_cast<uint32_t>(bot) * displayWidthBytes;
+        memcpy(rowTmp, rowA, displayWidthBytes);
+        memcpy(rowA, rowB, displayWidthBytes);
+        memcpy(rowB, rowTmp, displayWidthBytes);
       }
+    };
+    auto invertBuffer = [&](uint8_t* buf) {
+      auto* p = reinterpret_cast<uint32_t*>(buf);
+      for (uint32_t i = 0; i < bufferSize / 4; i++) p[i] = ~p[i];
+    };
+    // Bulk-send an entire plane to the controller in one SPI transaction after
+    // Y-flipping in place, then restore. Optionally inverts all bits (for
+    // absolute-mode full sync). Reduces X3 from 528 SPI writeBytes calls to 1.
+    auto sendPlane = [&](uint8_t ramCmd, uint8_t* buf, bool invert) {
+      if (invert) invertBuffer(buf);
+      flipRowsInPlace(buf);
+      sendCommand(ramCmd);
+      sendData(buf, static_cast<uint16_t>(bufferSize));
+      flipRowsInPlace(buf);
+      if (invert) invertBuffer(buf);
     };
 
     const bool forcedFullSync = _x3ForceFullSyncNext;
@@ -850,30 +884,24 @@ void EInkDisplay::displayBuffer(RefreshMode mode, const bool turnOffScreen) {
     _x3GrayState.lastBaseWasPartial = !doFullSync;
 
     if (doFullSync) {
-      // Full sync: img LUTs, inverted data to both RAMs
       sendCommandDataX3(0x20, lut_x3_vcom_img, 42);
       sendCommandDataX3(0x21, lut_x3_ww_img, 42);
       sendCommandDataX3(0x22, lut_x3_bw_img, 42);
       sendCommandDataX3(0x23, lut_x3_wb_img, 42);
       sendCommandDataX3(0x24, lut_x3_bb_img, 42);
 
-      sendCommand(0x13);
-      sendMirroredPlane(frameBuffer, true);
-      sendCommand(0x10);
-      sendMirroredPlane(frameBuffer, true);
+      sendPlane(0x13, frameBuffer, true);
+      sendPlane(0x10, frameBuffer, true);
 
       sendCommandDataByteX3(0x50, 0xA9, 0x07);
     } else {
-      // Fast differential: full LUTs, RED RAM (0x10) retains previous frame
       sendCommandDataX3(0x20, lut_x3_vcom_full, 42);
       sendCommandDataX3(0x21, lut_x3_ww_full, 42);
       sendCommandDataX3(0x22, lut_x3_bw_full, 42);
       sendCommandDataX3(0x23, lut_x3_wb_full, 42);
       sendCommandDataX3(0x24, lut_x3_bb_full, 42);
 
-      // Write only new data to 0x13; controller diffs against 0x10
-      sendCommand(0x13);
-      sendMirroredPlane(frameBuffer, false);
+      sendPlane(0x13, frameBuffer, false);
 
       sendCommandDataByteX3(0x50, 0x29, 0x07);
     }
